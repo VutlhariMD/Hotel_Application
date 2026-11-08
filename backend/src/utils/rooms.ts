@@ -2,7 +2,7 @@ import pool from '../db/pool.js';
 import type { Room } from '../types.js';
 
 export const ROOM_FIELDS =
-  'id, name, description, price_per_night, capacity, room_type, available, image_url, address, latitude, longitude';
+  'id, name, description, price_per_night, capacity, room_type, available, image_url, address, latitude, longitude, star_rating, facilities, policies';
 
 export function normalizeImageList(input: {
   images?: unknown;
@@ -20,14 +20,32 @@ export function normalizeImageList(input: {
   return single ? [single] : [];
 }
 
+export function normalizeFacilities(input: unknown): string[] {
+  if (Array.isArray(input)) {
+    return input.map((item) => String(item || '').trim()).filter(Boolean);
+  }
+  if (typeof input === 'string') {
+    return input
+      .split(/[\n,]/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+  return [];
+}
+
 export function serializeRoom(room: Room, images: string[] = []): Room {
   const list = images.length ? images : room.image_url ? [room.image_url] : [];
   return {
     ...room,
     latitude: Number(room.latitude),
     longitude: Number(room.longitude),
+    star_rating: Number(room.star_rating || 4),
+    facilities: Array.isArray(room.facilities) ? room.facilities : [],
+    policies: room.policies || '',
     image_url: list[0] || room.image_url,
     images: list,
+    avg_rating: room.avg_rating != null ? Number(room.avg_rating) : null,
+    review_count: Number(room.review_count || 0),
   };
 }
 

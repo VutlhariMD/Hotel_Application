@@ -26,8 +26,13 @@ export type Room = {
   address: string;
   latitude: string | number;
   longitude: string | number;
+  star_rating?: number;
+  facilities?: string[];
+  policies?: string;
   images?: string[];
   is_favorite?: boolean;
+  avg_rating?: number | null;
+  review_count?: number;
 };
 
 export type Booking = {
@@ -37,8 +42,9 @@ export type Booking = {
   check_in: string;
   check_out: string;
   guests: number;
+  rooms_count?: number;
   total_price: string | number;
-  status: 'pending' | 'paid' | 'cancelled';
+  status: 'pending' | 'paid' | 'cancelled' | 'approved';
   created_at?: string;
   room_name?: string;
   image_url?: string;
@@ -47,6 +53,26 @@ export type Booking = {
   nights?: number;
   guest_name?: string;
   guest_email?: string;
+};
+
+export type Review = {
+  id: number;
+  user_id: number;
+  room_id: number;
+  rating: number;
+  comment: string;
+  created_at?: string;
+  user_name?: string;
+};
+
+export type Notification = {
+  id: number;
+  user_id: number;
+  title: string;
+  message: string;
+  type: string;
+  read: boolean;
+  created_at?: string;
 };
 
 export type HotelSettings = {

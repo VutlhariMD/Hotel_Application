@@ -21,7 +21,10 @@ CREATE TABLE IF NOT EXISTS rooms (
   image_url TEXT NOT NULL,
   address TEXT NOT NULL DEFAULT '',
   latitude DECIMAL(10, 7) NOT NULL DEFAULT -23.9045000,
-  longitude DECIMAL(10, 7) NOT NULL DEFAULT 29.4689000
+  longitude DECIMAL(10, 7) NOT NULL DEFAULT 29.4689000,
+  star_rating INT NOT NULL DEFAULT 4 CHECK (star_rating BETWEEN 1 AND 5),
+  facilities TEXT[] NOT NULL DEFAULT '{}',
+  policies TEXT NOT NULL DEFAULT ''
 );
 
 CREATE TABLE IF NOT EXISTS room_images (
@@ -38,6 +41,7 @@ CREATE TABLE IF NOT EXISTS bookings (
   check_in DATE NOT NULL,
   check_out DATE NOT NULL,
   guests INT NOT NULL DEFAULT 1,
+  rooms_count INT NOT NULL DEFAULT 1,
   total_price DECIMAL(10, 2) NOT NULL,
   status VARCHAR(20) NOT NULL DEFAULT 'pending',
   created_at TIMESTAMP DEFAULT NOW()
@@ -67,3 +71,27 @@ CREATE TABLE IF NOT EXISTS hotel_settings (
   latitude DECIMAL(10, 7) NOT NULL,
   longitude DECIMAL(10, 7) NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS reviews (
+  id SERIAL PRIMARY KEY,
+  user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  room_id INT NOT NULL REFERENCES rooms(id) ON DELETE CASCADE,
+  rating INT NOT NULL CHECK (rating BETWEEN 1 AND 5),
+  comment TEXT NOT NULL DEFAULT '',
+  created_at TIMESTAMP DEFAULT NOW(),
+  UNIQUE (user_id, room_id)
+);
+
+CREATE TABLE IF NOT EXISTS notifications (
+  id SERIAL PRIMARY KEY,
+  user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  title VARCHAR(200) NOT NULL,
+  message TEXT NOT NULL,
+  type VARCHAR(50) NOT NULL DEFAULT 'info',
+  read BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_bookings_room_dates ON bookings(room_id, check_in, check_out);
+CREATE INDEX IF NOT EXISTS idx_reviews_room ON reviews(room_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id, read);

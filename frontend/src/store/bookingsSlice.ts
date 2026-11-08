@@ -45,13 +45,31 @@ export const fetchBooking = createAsyncThunk(
 export const createBooking = createAsyncThunk(
   'bookings/create',
   async (
-    form: { roomId: number; checkIn: string; checkOut: string; guests: number },
+    form: {
+      roomId: number;
+      checkIn: string;
+      checkOut: string;
+      guests: number;
+      roomsCount?: number;
+    },
     { getState }
   ) => {
     const { token } = (getState as AuthGetState)().auth;
     const data = await api<{ booking: Booking }>('/bookings', {
       method: 'POST',
       body: form,
+      token,
+    });
+    return data.booking;
+  }
+);
+
+export const cancelBooking = createAsyncThunk(
+  'bookings/cancel',
+  async (id: number, { getState }) => {
+    const { token } = (getState as AuthGetState)().auth;
+    const data = await api<{ booking: Booking }>(`/bookings/${id}/cancel`, {
+      method: 'PATCH',
       token,
     });
     return data.booking;
@@ -119,6 +137,14 @@ const bookingsSlice = createSlice({
       .addCase(payBooking.rejected, (state, action) => {
         state.payStatus = 'failed';
         state.payError = action.error.message || 'Payment failed';
+      })
+      .addCase(cancelBooking.fulfilled, (state, action) => {
+        state.list = state.list.map((b) =>
+          b.id === action.payload.id ? { ...b, status: 'cancelled' } : b
+        );
+        if (state.current?.id === action.payload.id) {
+          state.current = { ...state.current, status: 'cancelled' };
+        }
       });
   },
 });

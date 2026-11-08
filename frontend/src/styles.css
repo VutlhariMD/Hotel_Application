@@ -445,6 +445,11 @@ input:focus {
   color: var(--danger);
 }
 
+.badge-approved {
+  background: #dce8f5;
+  color: #1d4f7a;
+}
+
 .btn-google {
   background: #fff;
   color: var(--ink);
@@ -590,10 +595,159 @@ select:focus {
   margin-top: 0.5rem;
 }
 
+.search-panel {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.85rem 1rem;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  padding: 1rem 1.1rem;
+  margin-bottom: 1.5rem;
+}
+
+.search-panel label {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.search-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: end;
+  grid-column: span 1;
+}
+
+.facility-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0.55rem 0;
+}
+
+.facility-chip {
+  background: rgba(31, 92, 69, 0.1);
+  color: var(--accent);
+  padding: 0.25rem 0.55rem;
+  font-size: 0.82rem;
+  border-radius: 4px;
+}
+
+.policy-box {
+  margin: 0.6rem 0 0.9rem;
+}
+
+.policy-box p {
+  margin: 0.25rem 0 0;
+}
+
+.reviews-block {
+  margin-top: 1rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--line);
+}
+
+.reviews-block h3 {
+  margin: 0 0 0.25rem;
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+}
+
+.review-list {
+  list-style: none;
+  padding: 0;
+  margin: 0.75rem 0;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.review-list li {
+  background: rgba(28, 36, 32, 0.03);
+  padding: 0.65rem 0.75rem;
+}
+
+.review-list p {
+  margin: 0.25rem 0 0;
+}
+
+.stars {
+  display: inline-block;
+  margin-left: 0.45rem;
+  color: #b8891d;
+  letter-spacing: 0.05em;
+}
+
+.review-form {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.notif-wrap {
+  position: relative;
+}
+
+.notif-panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.4rem);
+  width: min(320px, 80vw);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--line);
+  z-index: 30;
+  padding: 0.75rem;
+}
+
+.notif-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.notif-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 280px;
+  overflow: auto;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.notif-list button {
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: rgba(31, 92, 69, 0.06);
+  padding: 0.55rem 0.65rem;
+  cursor: pointer;
+  font: inherit;
+  display: grid;
+  gap: 0.15rem;
+}
+
+.notif-list li.is-read button {
+  background: transparent;
+  opacity: 0.75;
+}
+
+.notif-list span {
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
 @media (max-width: 900px) {
   .admin-grid,
-  .room-card-rich {
+  .room-card-rich,
+  .search-panel {
     grid-template-columns: 1fr;
+  }
+
+  .search-actions {
+    grid-column: auto;
   }
 }
 

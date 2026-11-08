@@ -2,6 +2,7 @@ import { Router, type Request, type Response } from 'express';
 import pool from '../db/pool.js';
 import { requireAuth } from '../middleware/auth.js';
 import type { AuthedRequest, Booking } from '../types.js';
+import { createNotification } from '../utils/notifications.js';
 
 const router = Router();
 
@@ -9,8 +10,11 @@ type ChargeResult =
   | { ok: true; stripeId: string; last4: string; amount: number }
   | { ok: false; message: string };
 
-/** Dumb Stripe — no real Stripe keys. Accepts 4242 4242 4242 4242. */
-function fakeStripeCharge(amount: number, cardNumber: string): ChargeResult {
+/**
+ * Stripe-compatible test payment gateway (no live Stripe keys required).
+ * Accepts Stripe test card 4242 4242 4242 4242; declines 4000 0000 0000 0002.
+ */
+function stripeTestCharge(amount: number, cardNumber: string): ChargeResult {
   const digits = String(cardNumber || '').replace(/\s/g, '');
 
   if (!/^\d{16}$/.test(digits)) {
@@ -74,12 +78,17 @@ router.post('/pay', requireAuth as never, async (req: Request, res: Response) =>
       return;
     }
 
-    const charge = fakeStripeCharge(Number(booking.total_price), cardNumber);
+    const charge = stripeTestCharge(Number(booking.total_price), cardNumber);
     if (!charge.ok) {
       await client.query('ROLLBACK');
       res.status(402).json({ message: charge.message });
       return;
     }
+
+    const roomName = await client.query<{ name: string }>(
+      'SELECT name FROM rooms WHERE id = $1',
+      [booking.room_id]
+    );
 
     await client.query(
       `INSERT INTO payments (booking_id, amount, card_last4, stripe_id, status)
@@ -88,6 +97,13 @@ router.post('/pay', requireAuth as never, async (req: Request, res: Response) =>
     );
     await client.query(`UPDATE bookings SET status = 'paid' WHERE id = $1`, [booking.id]);
     await client.query('COMMIT');
+
+    await createNotification(
+      authed.user.id,
+      'Payment confirmed',
+      `Payment for ${roomName.rows[0]?.name || 'your stay'} succeeded. Booking #${booking.id} is confirmed.`,
+      'payment'
+    );
 
     res.json({
       message: 'Payment successful',

@@ -5,6 +5,7 @@ import type { AuthedRequest, Room } from '../types.js';
 import {
   ROOM_FIELDS,
   attachImages,
+  normalizeFacilities,
   normalizeImageList,
   replaceRoomImages,
   serializeRoom,
@@ -12,9 +13,32 @@ import {
 
 const router = Router();
 
+async function attachRatings(rooms: Room[]): Promise<Room[]> {
+  if (!rooms.length) return rooms;
+  const ids = rooms.map((r) => r.id);
+  const result = await pool.query<{ room_id: number; avg_rating: string; review_count: string }>(
+    `SELECT room_id,
+            ROUND(AVG(rating)::numeric, 1) AS avg_rating,
+            COUNT(*)::text AS review_count
+     FROM reviews
+     WHERE room_id = ANY($1::int[])
+     GROUP BY room_id`,
+    [ids]
+  );
+  const map = new Map(result.rows.map((row) => [row.room_id, row]));
+  return rooms.map((room) => {
+    const stats = map.get(room.id);
+    return {
+      ...room,
+      avg_rating: stats ? Number(stats.avg_rating) : null,
+      review_count: stats ? Number(stats.review_count) : 0,
+    };
+  });
+}
+
 router.get('/', optionalAuth as never, async (req: Request, res: Response) => {
   const authed = req as AuthedRequest;
-  const { type, available } = req.query;
+  const { type, available, q, location, minPrice, maxPrice, capacity, minRating } = req.query;
   const params: unknown[] = [];
   const where: string[] = [];
 
@@ -25,6 +49,34 @@ router.get('/', optionalAuth as never, async (req: Request, res: Response) => {
   if (available === 'true') {
     where.push('available = TRUE');
   }
+  if (available === 'false') {
+    where.push('available = FALSE');
+  }
+
+  const search = typeof q === 'string' ? q : typeof location === 'string' ? location : '';
+  if (search.trim()) {
+    params.push(`%${search.trim().toLowerCase()}%`);
+    where.push(
+      `(LOWER(name) LIKE $${params.length} OR LOWER(address) LIKE $${params.length} OR LOWER(description) LIKE $${params.length} OR LOWER(room_type) LIKE $${params.length})`
+    );
+  }
+
+  if (minPrice != null && String(minPrice).trim() !== '' && !Number.isNaN(Number(minPrice))) {
+    params.push(Number(minPrice));
+    where.push(`price_per_night >= $${params.length}`);
+  }
+  if (maxPrice != null && String(maxPrice).trim() !== '' && !Number.isNaN(Number(maxPrice))) {
+    params.push(Number(maxPrice));
+    where.push(`price_per_night <= $${params.length}`);
+  }
+  if (capacity != null && String(capacity).trim() !== '' && !Number.isNaN(Number(capacity))) {
+    params.push(Number(capacity));
+    where.push(`capacity >= $${params.length}`);
+  }
+  if (minRating != null && String(minRating).trim() !== '' && !Number.isNaN(Number(minRating))) {
+    params.push(Number(minRating));
+    where.push(`star_rating >= $${params.length}`);
+  }
 
   try {
     let sql = `SELECT ${ROOM_FIELDS} FROM rooms`;
@@ -33,6 +85,7 @@ router.get('/', optionalAuth as never, async (req: Request, res: Response) => {
 
     const result = await pool.query<Room>(sql, params);
     let rooms = await attachImages(result.rows);
+    rooms = await attachRatings(rooms);
 
     if (authed.user?.id) {
       const favs = await pool.query<{ room_id: number }>(
@@ -74,7 +127,8 @@ router.get('/:id', optionalAuth as never, async (req: Request, res: Response) =>
       return;
     }
 
-    const [room] = await attachImages(result.rows);
+    let [room] = await attachImages(result.rows);
+    [room] = await attachRatings([room]);
     if (authed.user?.id) {
       const fav = await pool.query(
         'SELECT 1 FROM favorites WHERE user_id = $1 AND room_id = $2',
@@ -101,9 +155,14 @@ router.post('/', requireAdmin as never, async (req: Request, res: Response) => {
     address,
     latitude,
     longitude,
+    star_rating,
+    policies,
   } = req.body as Partial<Room> & { images?: string[] };
 
   const images = normalizeImageList(req.body as { images?: string[]; image_url?: string });
+  const facilities = normalizeFacilities(
+    (req.body as { facilities?: unknown }).facilities
+  );
 
   if (!name?.trim() || !description?.trim()) {
     res.status(400).json({ message: 'Name and description are required' });
@@ -130,13 +189,15 @@ router.post('/', requireAdmin as never, async (req: Request, res: Response) => {
     return;
   }
 
+  const stars = Math.min(5, Math.max(1, Number(star_rating) || 4));
+
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
     const result = await client.query<Room>(
       `INSERT INTO rooms
-        (name, description, price_per_night, capacity, room_type, available, image_url, address, latitude, longitude)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        (name, description, price_per_night, capacity, room_type, available, image_url, address, latitude, longitude, star_rating, facilities, policies)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
        RETURNING ${ROOM_FIELDS}`,
       [
         name.trim(),
@@ -149,6 +210,9 @@ router.post('/', requireAdmin as never, async (req: Request, res: Response) => {
         address.trim(),
         Number(latitude),
         Number(longitude),
+        stars,
+        facilities,
+        String(policies || '').trim(),
       ]
     );
     const room = result.rows[0];
@@ -180,9 +244,14 @@ router.put('/:id', requireAdmin as never, async (req: Request, res: Response) =>
     address,
     latitude,
     longitude,
+    star_rating,
+    policies,
   } = req.body as Partial<Room> & { images?: string[] };
 
   const images = normalizeImageList(req.body as { images?: string[]; image_url?: string });
+  const facilities = normalizeFacilities(
+    (req.body as { facilities?: unknown }).facilities
+  );
 
   if (!name?.trim() || !description?.trim()) {
     res.status(400).json({ message: 'Name and description are required' });
@@ -201,13 +270,15 @@ router.put('/:id', requireAdmin as never, async (req: Request, res: Response) =>
     return;
   }
 
+  const stars = Math.min(5, Math.max(1, Number(star_rating) || 4));
+
   try {
     const result = await pool.query<Room>(
       `UPDATE rooms
        SET name = $1, description = $2, price_per_night = $3, capacity = $4,
            room_type = $5, available = $6, image_url = $7, address = $8,
-           latitude = $9, longitude = $10
-       WHERE id = $11
+           latitude = $9, longitude = $10, star_rating = $11, facilities = $12, policies = $13
+       WHERE id = $14
        RETURNING ${ROOM_FIELDS}`,
       [
         name.trim(),
@@ -220,6 +291,9 @@ router.put('/:id', requireAdmin as never, async (req: Request, res: Response) =>
         address.trim(),
         Number(latitude),
         Number(longitude),
+        stars,
+        facilities,
+        String(policies || '').trim(),
         req.params.id,
       ]
     );

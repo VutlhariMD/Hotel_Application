@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
+import { Link } from 'react-router-dom';
 import { clearAuthError, updateProfile } from '../store/authSlice';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 
@@ -52,6 +53,14 @@ export default function Profile() {
       <div className="page-intro">
         <h1>Your profile</h1>
         <p className="muted">Update your contact details and password.</p>
+        <div className="room-actions">
+          <Link className="btn btn-ghost btn-sm" to="/bookings">
+            View bookings
+          </Link>
+          <Link className="btn btn-ghost btn-sm" to="/favorites">
+            View favorites
+          </Link>
+        </div>
       </div>
 
       <form className="auth-form profile-form" onSubmit={onSubmit}>

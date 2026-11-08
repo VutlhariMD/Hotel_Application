@@ -16,8 +16,14 @@ type RoomSeed = {
   address: string;
   latitude: number;
   longitude: number;
+  star_rating: number;
+  facilities: string[];
+  policies: string;
   images: string[];
 };
+
+const defaultPolicies =
+  'Check-in from 14:00. Check-out by 11:00. No smoking indoors. Free cancellation up to 24 hours before arrival.';
 
 const rooms: RoomSeed[] = [
   {
@@ -30,6 +36,9 @@ const rooms: RoomSeed[] = [
     address: '12 Church Street, Polokwane, Limpopo, 0699',
     latitude: -23.9045,
     longitude: 29.4689,
+    star_rating: 3,
+    facilities: ['Wi-Fi', 'Work desk', 'Air conditioning', 'Daily housekeeping'],
+    policies: defaultPolicies,
     images: [
       'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=800',
       'https://images.unsplash.com/photo-1595576508898-0ad5c879a061?w=800',
@@ -46,6 +55,9 @@ const rooms: RoomSeed[] = [
     address: '45 Landdros Mare Street, Polokwane, Limpopo, 0699',
     latitude: -23.9082,
     longitude: 29.4556,
+    star_rating: 4,
+    facilities: ['Wi-Fi', 'Ensuite bathroom', 'TV', 'Mini fridge', 'Parking'],
+    policies: defaultPolicies,
     images: [
       'https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=800',
       'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800',
@@ -62,6 +74,9 @@ const rooms: RoomSeed[] = [
     address: '8 Grobler Street, Polokwane, Limpopo, 0699',
     latitude: -23.9001,
     longitude: 29.4612,
+    star_rating: 4,
+    facilities: ['Wi-Fi', 'Kitchenette', 'Sofa bed', 'Two bedrooms', 'Washer', 'Parking'],
+    policies: `${defaultPolicies} Extra beds available on request.`,
     images: [
       'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800',
       'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800',
@@ -78,6 +93,9 @@ const rooms: RoomSeed[] = [
     address: '3 Biccard Street, Polokwane, Limpopo, 0699',
     latitude: -23.9125,
     longitude: 29.4508,
+    star_rating: 5,
+    facilities: ['Wi-Fi', 'Balcony', 'King bed', 'Room service', 'Spa access', 'Parking'],
+    policies: defaultPolicies,
     images: [
       'https://images.unsplash.com/photo-1590490360182-c33d57733427?w=800',
       'https://images.unsplash.com/photo-1578683010236-d716f9a3f461?w=800',
@@ -94,6 +112,9 @@ const rooms: RoomSeed[] = [
     address: '21 Hans van Rensburg Street, Polokwane, Limpopo, 0699',
     latitude: -23.8968,
     longitude: 29.4741,
+    star_rating: 5,
+    facilities: ['Wi-Fi', 'Private lounge', 'City view', 'Butler service', 'Jacuzzi', 'Parking'],
+    policies: `${defaultPolicies} Quiet hours after 22:00.`,
     images: [
       'https://images.unsplash.com/photo-1578683010236-d716f9a3f461?w=800',
       'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800',
@@ -122,7 +143,21 @@ async function seed(): Promise<void> {
     await client.query(
       `ALTER TABLE rooms ADD COLUMN IF NOT EXISTS longitude DECIMAL(10, 7) NOT NULL DEFAULT 29.4689000`
     ).catch(() => undefined);
+    await client.query(
+      `ALTER TABLE rooms ADD COLUMN IF NOT EXISTS star_rating INT NOT NULL DEFAULT 4`
+    ).catch(() => undefined);
+    await client.query(
+      `ALTER TABLE rooms ADD COLUMN IF NOT EXISTS facilities TEXT[] NOT NULL DEFAULT '{}'`
+    ).catch(() => undefined);
+    await client.query(
+      `ALTER TABLE rooms ADD COLUMN IF NOT EXISTS policies TEXT NOT NULL DEFAULT ''`
+    ).catch(() => undefined);
+    await client.query(
+      `ALTER TABLE bookings ADD COLUMN IF NOT EXISTS rooms_count INT NOT NULL DEFAULT 1`
+    ).catch(() => undefined);
 
+    await client.query('DELETE FROM notifications').catch(() => undefined);
+    await client.query('DELETE FROM reviews').catch(() => undefined);
     await client.query('DELETE FROM payments');
     await client.query('DELETE FROM bookings');
     await client.query('DELETE FROM favorites');
@@ -144,8 +179,8 @@ async function seed(): Promise<void> {
     for (const room of rooms) {
       const inserted = await client.query<{ id: number }>(
         `INSERT INTO rooms
-          (name, description, price_per_night, capacity, room_type, available, image_url, address, latitude, longitude)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+          (name, description, price_per_night, capacity, room_type, available, image_url, address, latitude, longitude, star_rating, facilities, policies)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
          RETURNING id`,
         [
           room.name,
@@ -158,6 +193,9 @@ async function seed(): Promise<void> {
           room.address,
           room.latitude,
           room.longitude,
+          room.star_rating,
+          room.facilities,
+          room.policies,
         ]
       );
 

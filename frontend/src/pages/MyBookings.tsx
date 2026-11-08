@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { fetchMyBookings } from '../store/bookingsSlice';
+import { cancelBooking, fetchMyBookings } from '../store/bookingsSlice';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { formatZAR } from '../utils/money';
 
@@ -34,16 +34,30 @@ export default function MyBookings() {
             <div>
               <h2>{b.room_name}</h2>
               <p className="muted">
-                {String(b.check_in).slice(0, 10)} → {String(b.check_out).slice(0, 10)} · {b.guests}{' '}
-                guest{b.guests === 1 ? '' : 's'}
+                {String(b.check_in).slice(0, 10)} → {String(b.check_out).slice(0, 10)} ·{' '}
+                {b.rooms_count || 1} room{(b.rooms_count || 1) === 1 ? '' : 's'} · {b.guests} guest
+                {b.guests === 1 ? '' : 's'}
               </p>
               <p className="total">{formatZAR(b.total_price)}</p>
               <span className={`badge badge-${b.status}`}>{b.status}</span>
-              {b.status === 'pending' && (
-                <Link className="btn btn-primary btn-sm" to={`/pay/${b.id}`}>
-                  Pay now
-                </Link>
-              )}
+              <div className="room-actions">
+                {b.status === 'pending' && (
+                  <Link className="btn btn-primary btn-sm" to={`/pay/${b.id}`}>
+                    Pay now
+                  </Link>
+                )}
+                {b.status !== 'cancelled' && (
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-sm"
+                    onClick={() => {
+                      if (confirm('Cancel this booking?')) dispatch(cancelBooking(b.id));
+                    }}
+                  >
+                    Cancel
+                  </button>
+                )}
+              </div>
             </div>
           </article>
         ))}

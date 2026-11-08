@@ -70,7 +70,8 @@ export default function Payment() {
         <p className="total">{formatZAR(current.total_price)}</p>
 
         <div className="stripe-note">
-          Dumb Stripe test mode — use card <code>4242 4242 4242 4242</code>
+          Stripe test gateway — use card <code>4242 4242 4242 4242</code> (decline:{' '}
+          <code>4000 0000 0000 0002</code>)
         </div>
 
         <label>

@@ -27,6 +27,7 @@ export default function BookRoom() {
     checkIn: today,
     checkOut: addDays(today, 2),
     guests: 1,
+    roomsCount: 1,
   });
 
   useEffect(() => {
@@ -40,7 +41,9 @@ export default function BookRoom() {
     return Math.max(0, Math.round((b.getTime() - a.getTime()) / 86400000));
   }, [form.checkIn, form.checkOut]);
 
-  const total = room ? Number(room.price_per_night) * nights : 0;
+  const total = room
+    ? Number(room.price_per_night) * nights * Number(form.roomsCount || 1)
+    : 0;
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -50,6 +53,7 @@ export default function BookRoom() {
         checkIn: form.checkIn,
         checkOut: form.checkOut,
         guests: Number(form.guests),
+        roomsCount: Number(form.roomsCount || 1),
       })
     );
     if (createBooking.fulfilled.match(result)) {
@@ -83,9 +87,28 @@ export default function BookRoom() {
           <h1>Book {room.name}</h1>
           <p className="muted">{room.description}</p>
           <p className="meta">
-            {formatZAR(room.price_per_night, 0)}/night · sleeps {room.capacity} · {room.room_type}
+            {'★'.repeat(room.star_rating || 4)}
+            {'☆'.repeat(5 - (room.star_rating || 4))} · {formatZAR(room.price_per_night, 0)}/night ·
+            sleeps {room.capacity} · {room.room_type}
           </p>
           <p className="meta room-address">{room.address}</p>
+
+          {!!room.facilities?.length && (
+            <div className="facility-list">
+              {room.facilities.map((item) => (
+                <span key={item} className="facility-chip">
+                  {item}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {room.policies && (
+            <div className="policy-box">
+              <strong>Policies</strong>
+              <p className="muted">{room.policies}</p>
+            </div>
+          )}
 
           <div className="room-actions">
             <button
@@ -134,11 +157,22 @@ export default function BookRoom() {
             />
           </label>
           <label>
+            Number of rooms
+            <input
+              type="number"
+              min={1}
+              max={5}
+              value={form.roomsCount}
+              onChange={(e) => setForm({ ...form, roomsCount: Number(e.target.value) })}
+              required
+            />
+          </label>
+          <label>
             Guests
             <input
               type="number"
               min={1}
-              max={room.capacity}
+              max={room.capacity * Number(form.roomsCount || 1)}
               value={form.guests}
               onChange={(e) => setForm({ ...form, guests: Number(e.target.value) })}
               required
@@ -147,7 +181,8 @@ export default function BookRoom() {
 
           <div className="total-box">
             <span>
-              {nights} night{nights === 1 ? '' : 's'}
+              {form.roomsCount} room{form.roomsCount === 1 ? '' : 's'} · {nights} night
+              {nights === 1 ? '' : 's'}
             </span>
             <strong>{formatZAR(total)}</strong>
           </div>

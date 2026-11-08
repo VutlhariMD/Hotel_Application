@@ -79,7 +79,7 @@ export default function Login() {
         ) : (
           <p className="muted small">
             Google sign-in is available once you add <code>GOOGLE_CLIENT_ID</code> and{' '}
-            <code>GOOGLE_CLIENT_SECRET</code> to <code>server/.env</code>.
+            <code>GOOGLE_CLIENT_SECRET</code> to <code>backend/.env</code>.
           </p>
         )}
 

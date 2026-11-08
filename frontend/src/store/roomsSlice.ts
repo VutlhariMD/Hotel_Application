@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { api } from '../api/client';
-import type { Room, RoomFormPayload } from '../types';
+import type { Room, RoomFormPayload, RoomSearchFilters } from '../types';
 
 type AuthGetState = () => { auth: { token: string | null } };
 
@@ -8,6 +8,7 @@ type RoomsState = {
   list: Room[];
   current: Room | null;
   types: string[];
+  filters: RoomSearchFilters;
   status: 'idle' | 'loading' | 'succeeded' | 'failed';
   error: string | null;
 };
@@ -16,15 +17,30 @@ const initialState: RoomsState = {
   list: [],
   current: null,
   types: [],
+  filters: {},
   status: 'idle',
   error: null,
 };
 
-export const fetchRooms = createAsyncThunk('rooms/fetchAll', async (_, { getState }) => {
-  const { token } = (getState as AuthGetState)().auth;
-  const data = await api<{ rooms: Room[] }>('/rooms', { token });
-  return data.rooms;
-});
+function toQuery(filters: RoomSearchFilters = {}): string {
+  const params = new URLSearchParams();
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value != null && String(value).trim() !== '') {
+      params.set(key, String(value).trim());
+    }
+  });
+  const qs = params.toString();
+  return qs ? `?${qs}` : '';
+}
+
+export const fetchRooms = createAsyncThunk(
+  'rooms/fetchAll',
+  async (filters: RoomSearchFilters | undefined, { getState }) => {
+    const { token } = (getState as AuthGetState)().auth;
+    const data = await api<{ rooms: Room[] }>(`/rooms${toQuery(filters)}`, { token });
+    return data.rooms;
+  }
+);
 
 export const fetchRoom = createAsyncThunk('rooms/fetchOne', async (id: string, { getState }) => {
   const { token } = (getState as AuthGetState)().auth;
@@ -69,6 +85,9 @@ const roomsSlice = createSlice({
     clearCurrentRoom(state) {
       state.current = null;
     },
+    setRoomFilters(state, action: { payload: RoomSearchFilters }) {
+      state.filters = action.payload;
+    },
     setRoomFavorite(state, action: { payload: { roomId: number; isFavorite: boolean } }) {
       const { roomId, isFavorite } = action.payload;
       state.list = state.list.map((r) =>
@@ -111,5 +130,5 @@ const roomsSlice = createSlice({
   },
 });
 
-export const { clearCurrentRoom, setRoomFavorite } = roomsSlice.actions;
+export const { clearCurrentRoom, setRoomFavorite, setRoomFilters } = roomsSlice.actions;
 export default roomsSlice.reducer;
