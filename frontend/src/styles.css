@@ -709,6 +709,12 @@ input:focus {
   font-weight: 700;
 }
 
+.stripe-checkout {
+  display: grid;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
 .booking-list {
   display: grid;
   gap: 1rem;

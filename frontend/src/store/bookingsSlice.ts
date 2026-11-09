@@ -76,14 +76,25 @@ export const cancelBooking = createAsyncThunk(
   }
 );
 
-export const payBooking = createAsyncThunk(
-  'bookings/pay',
+export const createPaymentIntent = createAsyncThunk(
+  'bookings/createPaymentIntent',
+  async (bookingId: number, { getState }) => {
+    const { token } = (getState as AuthGetState)().auth;
+    return api<{ clientSecret: string; paymentIntentId: string; amount: number }>(
+      '/payments/create-intent',
+      { method: 'POST', body: { bookingId }, token }
+    );
+  }
+);
+
+export const completeStripePayment = createAsyncThunk(
+  'bookings/completeStripePayment',
   async (
-    form: { bookingId: number; cardNumber: string; expiry: string; cvc: string },
+    form: { bookingId: number; paymentIntentId: string },
     { getState }
   ) => {
     const { token } = (getState as AuthGetState)().auth;
-    return api<PaymentResult>('/payments/pay', { method: 'POST', body: form, token });
+    return api<PaymentResult>('/payments/complete', { method: 'POST', body: form, token });
   }
 );
 
@@ -125,16 +136,27 @@ const bookingsSlice = createSlice({
         state.status = 'failed';
         state.error = action.error.message || 'Failed to create booking';
       })
-      .addCase(payBooking.pending, (state) => {
+      .addCase(createPaymentIntent.pending, (state) => {
         state.payStatus = 'loading';
         state.payError = null;
       })
-      .addCase(payBooking.fulfilled, (state, action) => {
+      .addCase(createPaymentIntent.fulfilled, (state) => {
+        state.payStatus = 'idle';
+      })
+      .addCase(createPaymentIntent.rejected, (state, action) => {
+        state.payStatus = 'failed';
+        state.payError = action.error.message || 'Failed to start payment';
+      })
+      .addCase(completeStripePayment.pending, (state) => {
+        state.payStatus = 'loading';
+        state.payError = null;
+      })
+      .addCase(completeStripePayment.fulfilled, (state, action) => {
         state.payStatus = 'succeeded';
         state.lastPayment = action.payload;
         if (state.current) state.current.status = 'paid';
       })
-      .addCase(payBooking.rejected, (state, action) => {
+      .addCase(completeStripePayment.rejected, (state, action) => {
         state.payStatus = 'failed';
         state.payError = action.error.message || 'Payment failed';
       })

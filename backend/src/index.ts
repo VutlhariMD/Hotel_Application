@@ -8,7 +8,7 @@ import dotenv from 'dotenv';
 import authRoutes from './routes/auth.js';
 import roomRoutes from './routes/rooms.js';
 import bookingRoutes from './routes/bookings.js';
-import paymentRoutes from './routes/payments.js';
+import paymentRoutes, { stripeWebhook } from './routes/payments.js';
 import favoriteRoutes from './routes/favorites.js';
 import hotelRoutes from './routes/hotel.js';
 import reviewRoutes from './routes/reviews.js';
@@ -28,6 +28,14 @@ app.use(
   cors({
     origin: process.env.CLIENT_URL || 'http://localhost:5173',
   })
+);
+// Stripe webhooks need the raw body for signature verification.
+app.post(
+  '/api/payments/webhook',
+  express.raw({ type: 'application/json' }),
+  (req, res) => {
+    void stripeWebhook(req, res);
+  }
 );
 app.use(express.json({ limit: '1mb' }));
 
