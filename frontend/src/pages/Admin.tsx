@@ -149,8 +149,15 @@ export default function Admin() {
 
   async function onDeleteRoom(id: number) {
     if (!confirm('Delete this room?')) return;
-    await dispatch(deleteRoom(id));
-    if (editingId === id) resetForm();
+    setMsg(null);
+    setFormError(null);
+    const result = await dispatch(deleteRoom(id));
+    if (deleteRoom.fulfilled.match(result)) {
+      if (editingId === id) resetForm();
+      setMsg('Room deleted');
+      return;
+    }
+    setFormError(result.error.message || 'Cannot delete this room');
   }
 
   async function onSaveBooking(e: FormEvent) {

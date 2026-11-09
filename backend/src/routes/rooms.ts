@@ -312,6 +312,19 @@ router.put('/:id', requireAdmin as never, async (req: Request, res: Response) =>
 
 router.delete('/:id', requireAdmin as never, async (req: Request, res: Response) => {
   try {
+    const activeBookings = await pool.query(
+      `SELECT id FROM bookings
+       WHERE room_id = $1 AND status NOT IN ('cancelled')
+       LIMIT 1`,
+      [req.params.id]
+    );
+    if (activeBookings.rows[0]) {
+      res.status(409).json({
+        message: 'Cannot delete a room that has active bookings. Cancel or delete the bookings first.',
+      });
+      return;
+    }
+
     const result = await pool.query('DELETE FROM rooms WHERE id = $1 RETURNING id', [
       req.params.id,
     ]);
