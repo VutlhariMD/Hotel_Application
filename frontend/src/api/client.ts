@@ -1,6 +1,4 @@
-const API = `${
-  (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '')
-}/api`;
+const API = `${ (import.meta.env.API_URL|| '').replace(/\/+$/, '')}/api`;
 
 
 type ApiOptions = {
