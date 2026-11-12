@@ -1,11 +1,5 @@
-const BACKEND_URL = import.meta.env.V_BACKEND_URL;
+const API = `${ (import.meta.env.V_BACKEND_URL|| '').replace(/\/+$/, '')}/api`;
 
-if (!BACKEND_URL) {
-  
-  console.log("VITE_BACKEND_URL is not configured !!" , BACKEND_URL);  
-}
-
-const API = `${BACKEND_URL.replace(/\/+$/, "")}/api`;
 
 type ApiOptions = {
   method?: string;
