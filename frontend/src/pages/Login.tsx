@@ -3,6 +3,9 @@ import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-do
 import { googleAuthUrl } from '../api/client';
 import { login, clearAuthError, checkGoogleAuth } from '../store/authSlice';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
+import { Mail, LockKeyhole, Eye, EyeOff } from "lucide-react";
+
+
 
 const GOOGLE_ERRORS: Record<string, string> = {
   google_denied: 'Google sign-in was cancelled.',
@@ -21,7 +24,7 @@ export default function Login() {
   const [form, setForm] = useState({ email: 'guest@hhotel.com', password: 'password123' });
   const from = (location.state as { from?: string } | null)?.from || '/';
   const googleError = params.get('error');
-
+const [showPassword, setShowPassword] = useState(false);
   useEffect(() => {
     dispatch(clearAuthError());
     dispatch(checkGoogleAuth());
@@ -48,22 +51,43 @@ export default function Login() {
 
         <label>
           Email
+          <div>
+            <Mail className="input-icon" size={19} />
+
           <input
+            placeholder="Enter your email"
             type="email"
             value={form.email}
             onChange={(e) => setForm({ ...form, email: e.target.value })}
             required
           />
+            </div>
         </label>
-        <label>
-          Password
-          <input
-            type="password"
-            value={form.password}
-            onChange={(e) => setForm({ ...form, password: e.target.value })}
-            required
-          />
-        </label>
+      <label>
+  Password
+  <div className="input-wrapper">
+    <LockKeyhole className="input-icon" size={19} />
+
+    <input
+      type={showPassword ? "text" : "password"}
+      placeholder="Enter your password"
+      value={form.password}
+      onChange={(e) =>
+        setForm({ ...form, password: e.target.value })
+      }
+      required
+    />
+
+    <button
+      type="button"
+      className="password-toggle"
+      onClick={() => setShowPassword(!showPassword)}
+      aria-label={showPassword ? "Hide password" : "Show password"}
+    >
+      {showPassword ? <EyeOff size={19} /> : <Eye size={19} />}
+    </button>
+  </div>
+</label>
 
         {(error || googleError) && (
           <p className="error">{error || GOOGLE_ERRORS[googleError || ''] || googleError}</p>
