@@ -24,9 +24,36 @@ const PORT = Number(process.env.PORT) || 5000;
 app.disable('x-powered-by');
 app.use(securityHeaders);
 app.use(rateLimit());
+
+const allowedOrigins = (process.env.CLIENT_URL || 'http://localhost:5173')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    origin(origin, callback) {
+      // Non-browser clients (curl, server-to-server) send no Origin.
+      if (!origin) {
+        callback(null, true);
+        return;
+      }
+      if (allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
+        callback(null, true);
+        return;
+      }
+      // Vercel production + preview deployments
+      try {
+        const host = new URL(origin).hostname;
+        if (host.endsWith('.vercel.app') || host === 'localhost' || host === '127.0.0.1') {
+          callback(null, true);
+          return;
+        }
+      } catch {
+        // ignore invalid Origin
+      }
+      callback(null, false);
+    },
   })
 );
 // Stripe webhooks need the raw body for signature verification.

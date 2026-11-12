@@ -1,5 +1,12 @@
-const API = `${ (import.meta.env.V_BACKEND_URL|| '').replace(/\/+$/, '')}/api`;
+/** Backend origin only (no trailing slash). Empty in local dev → Vite proxies `/api`. */
+const BACKEND_URL = String(
+  import.meta.env.VITE_API_URL ??
+    (import.meta.env.PROD ? 'https://hotel-application-backend-yd7r.onrender.com' : '')
+).replace(/\/+$/, '');
 
+export const API_BASE = `${BACKEND_URL}/api`;
+
+export const googleAuthUrl = `${API_BASE}/auth/google`;
 
 type ApiOptions = {
   method?: string;
@@ -12,7 +19,7 @@ export async function api<T>(path: string, { method = 'GET', body, token }: ApiO
   if (body) headers['Content-Type'] = 'application/json';
   if (token) headers.Authorization = `Bearer ${token}`;
 
-  const res = await fetch(`${API}${path}`, {
+  const res = await fetch(`${API_BASE}${path}`, {
     method,
     headers,
     body: body ? JSON.stringify(body) : undefined,

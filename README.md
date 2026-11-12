@@ -129,7 +129,9 @@ npm install --prefix backend
 
 ### 4. Configure environment variables
 
-Create a `.env` file in the backend directory and configure the required database connection, authentication credentials, and payment gateway settings.
+Create a `.env` file in the backend directory (see `backend/.env.example`).
+
+For the frontend, copy `frontend/.env.example` if you need to override the API URL. Locally you can leave `VITE_API_URL` empty — Vite proxies `/api` to `http://localhost:5000`.
 
 ### 5. Run the application
 
@@ -138,6 +140,24 @@ npm run dev
 ```
 
 The frontend and backend will run on their configured local ports.
+
+## Deployment (Vercel + Render)
+
+**Backend (Render)** — set these environment variables:
+
+| Variable | Example |
+|---|---|
+| `DATABASE_URL` | your Postgres connection string |
+| `JWT_SECRET` | a strong secret |
+| `CLIENT_URL` | `https://your-app.vercel.app` (comma-separate multiple frontends) |
+| `API_URL` | `https://hotel-application-backend-yd7r.onrender.com` |
+| Stripe / Google keys | as needed |
+
+**Frontend (Vercel)** — deploy the `frontend` folder. Production builds use `frontend/.env.production`, which points at:
+
+`https://hotel-application-backend-yd7r.onrender.com`
+
+Override with `VITE_API_URL` in the Vercel project settings if the backend URL changes. Redeploy after changing env vars so Vite can bake them into the build.
 
 ## Project Goal
 
