@@ -429,7 +429,8 @@ h2 {
   align-items: center;
   justify-content: center;
   border: 0;
-  border-radius: 4px;
+  height:2.5rem;
+  border-radius: 12px;
   padding: 0.75rem 1.15rem;
   font: inherit;
   font-weight: 600;
@@ -620,6 +621,7 @@ h2 {
   display: grid;
   place-items: center;
   padding: 2rem 0;
+
 }
 
 .auth-form,
@@ -632,6 +634,10 @@ h2 {
   padding: 1.75rem;
   display: grid;
   gap: 0.9rem;
+  border-radius: 24px; 
+  box-shadow: border-box;
+  background: var(--surface);
+  border: 1px solid var(--line);
 }
 
 label {
@@ -644,14 +650,14 @@ label {
 input {
   width: 100%;
   border: 1px solid var(--line);
-  border-radius: 4px;
-  padding: 0.7rem 0.8rem;
+  border-radius: 12px;
+  padding: 0.7rem 2rem;
   font: inherit;
   background: white;
 }
 
 input:focus {
-  outline: 2px solid rgba(31, 92, 69, 0.35);
+  outline: 1px solid rgba(230, 235, 230, 0.825);
   border-color: var(--accent);
 }
 
@@ -778,6 +784,7 @@ input:focus {
   background: #fff;
   color: var(--ink);
   border: 1px solid var(--line);
+  border-radius: 12px;
 }
 
 .btn-google:hover {
@@ -943,6 +950,7 @@ select:focus {
   grid-column: span 1;
 }
 
+
 .facility-list {
   display: flex;
   flex-wrap: wrap;
@@ -1040,6 +1048,8 @@ select:focus {
   display: grid;
   gap: 0.35rem;
 }
+ssss
+
 
 .notif-list button {
   width: 100%;
