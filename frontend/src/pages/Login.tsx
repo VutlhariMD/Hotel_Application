@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
+import { googleAuthUrl } from '../api/client';
 import { login, clearAuthError, checkGoogleAuth } from '../store/authSlice';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 
@@ -73,7 +74,7 @@ export default function Login() {
         </button>
 
         {googleEnabled ? (
-          <a className="btn btn-google" href="http://localhost:5000/api/auth/google">
+          <a className="btn btn-google" href={googleAuthUrl}>
             Continue with Google
           </a>
         ) : (
