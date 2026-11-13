@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-do
 import { googleAuthUrl } from '../api/client';
 import { login, clearAuthError, checkGoogleAuth } from '../store/authSlice';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
-import { Mail, LockKeyhole, Eye, EyeOff } from "lucide-react";
+import { LockKeyhole, Eye, EyeOff } from "lucide-react";
 
 
 
