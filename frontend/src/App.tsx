@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import ProtectedRoute from './components/ProtectedRoute';
 import Rooms from './pages/Rooms';
@@ -12,12 +12,25 @@ import Profile from './pages/Profile';
 import Favorites from './pages/Favorites';
 import Location from './pages/Location';
 import Admin from './pages/Admin';
+import RoomDetailsPage from './pages/RoomDetailsPage';
+import Loginbar from './components/AuthNavbar';
 
 export default function App() {
+
+    const location = useLocation();
+
+  // Pages that should display a top navbar
+  const isAuthPage =
+    location.pathname === '/login' ||
+    location.pathname === '/register' ||
+    location.pathname === '/home';
+
   return (
-    <div className="app">
-      <Navbar />
-      <main className="main">
+   
+   <div className={isAuthPage ? 'app auth-layout' : 'app'}>
+  {isAuthPage ? <Loginbar /> : <Navbar />}
+
+  <main className={isAuthPage ? 'main auth-main' : 'main'}>
         <Routes>
           <Route path="/" element={<Rooms />} />
           <Route path="/login" element={<Login />} />
@@ -71,9 +84,18 @@ export default function App() {
                 <Admin />
               </ProtectedRoute>
             }
+
           />
           <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="/rooms" element={<Rooms />} />
+
+<Route
+  path="/rooms/:id"
+  element={<RoomDetailsPage />}
+/><Route path="/rooms/:id" element={<RoomDetailsPage />} />
+
         </Routes>
+
       </main>
     </div>
   );

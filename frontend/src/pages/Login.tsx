@@ -52,7 +52,7 @@ const [showPassword, setShowPassword] = useState(false);
         <label>
           Email
           <div>
-            <Mail className="input-icon" size={19} />
+          {/*  <Mail className="input-icon" size={19} />*/}
 
           <input
             placeholder="Enter your email"

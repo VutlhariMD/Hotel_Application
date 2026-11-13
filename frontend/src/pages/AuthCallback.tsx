@@ -4,6 +4,7 @@ import { applyAuthSession } from '../store/authSlice';
 import { useAppDispatch } from '../store/hooks';
 import type { AuthResponse } from '../types';
 
+
 export default function AuthCallback() {
   const [params] = useSearchParams();
   const dispatch = useAppDispatch();
