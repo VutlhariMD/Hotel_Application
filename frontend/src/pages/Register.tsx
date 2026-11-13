@@ -36,6 +36,7 @@ export default function Register() {
         <label>
           Name
           <input
+          placeholder="Enter your name"
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
             required
@@ -44,6 +45,7 @@ export default function Register() {
         <label>
           Email
           <input
+           placeholder="Enter your email"
             type="email"
             value={form.email}
             onChange={(e) => setForm({ ...form, email: e.target.value })}
@@ -53,6 +55,7 @@ export default function Register() {
         <label>
           Password
           <input
+          placeholder="Enter your password"
             type="password"
             value={form.password}
             onChange={(e) => setForm({ ...form, password: e.target.value })}
